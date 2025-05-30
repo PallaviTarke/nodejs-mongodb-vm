@@ -1,0 +1,45 @@
+version: '3.8'
+   services:
+     app:
+       image: us-central1-docker.pkg.dev/your-gcp-project-id/nodejs-mongodb-repo/nodejs-app:latest
+       ports:
+         - "3000:3000"
+       environment:
+         - MONGO_URI=mongodb://mongo:27017/mydb
+       depends_on:
+         - mongo
+       networks:
+         - mynetwork
+     mongo:
+       image: mongo:latest
+       ports:
+         - "27017:27017"
+       environment:
+         - MONGO_INITDB_DATABASE=mydb
+       volumes:
+         - mongo-data:/data/db
+       networks:
+         - mynetwork
+     prometheus:
+       image: prom/prometheus:latest
+       ports:
+         - "9090:9090"
+       volumes:
+         - ./prometheus.yml:/etc/prometheus/prometheus.yml
+       networks:
+         - mynetwork
+     grafana:
+       image: grafana/grafana:latest
+       ports:
+         - "3001:3000"
+       environment:
+         - GF_SECURITY_ADMIN_PASSWORD=admin
+       depends_on:
+         - prometheus
+       networks:
+         - mynetwork
+   networks:
+     mynetwork:
+       driver: bridge
+   volumes:
+     mongo-data:
